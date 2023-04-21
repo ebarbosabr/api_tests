@@ -20,7 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class UserServiceImplTest {
@@ -29,8 +29,8 @@ class UserServiceImplTest {
     public static final String NAME     = "Valdir";
     public static final String EMAIL    = "valdir@mail.com";
     public static final String PASSWORD = "123";
-    public static final String OBJETO_NÃO_ENCONTRADO = "Objeto não encontrado";
     public static final String E_MAIL_JÁ_CADASTRADO_NO_SISTEMA = "E-mail já cadastrado no sistema";
+    public static final String OBJETO_NAO_ENCONTRADO = "Objeto não encontrado";
 
     @InjectMocks
     private UserServiceImpl service;
@@ -61,12 +61,12 @@ class UserServiceImplTest {
 
     @Test
     void whenFindByIdReturnAnObjectNotFoundException() {
-        when(repository.findById(anyInt())).thenThrow(new ObjectNotFoundException(OBJETO_NÃO_ENCONTRADO));
+        when(repository.findById(anyInt())).thenThrow(new ObjectNotFoundException(OBJETO_NAO_ENCONTRADO));
         try {
             service.findById(ID);
         } catch(Exception e) {
             assertEquals(ObjectNotFoundException.class, e.getClass());
-            assertEquals(OBJETO_NÃO_ENCONTRADO, e.getMessage());
+            assertEquals(OBJETO_NAO_ENCONTRADO, e.getMessage());
         }
     }
 
@@ -122,7 +122,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void whenUpdateReturnDataIntegrityVialationException() {
+    void whenUpdateReturnDataIntegrityViolationException() {
         when(repository.findByEmail(anyString())).thenReturn(optionalUser);
         try {
             optionalUser.get().setId(2);
@@ -135,7 +135,24 @@ class UserServiceImplTest {
     }
 
     @Test
-    void delete() {
+    void whenDeleteWithSuccess() {
+        when(repository.findById(anyInt())).thenReturn(optionalUser);
+        doNothing().when(repository).deleteById(anyInt());
+        service.delete(ID);
+        verify(repository, times(1)).deleteById(anyInt());
+    }
+
+    @Test
+    void whenDeleteObjectNotFoundException() {
+        when(repository.findById(anyInt())).thenThrow(new ObjectNotFoundException(OBJETO_NAO_ENCONTRADO));
+        try {
+            service.delete(ID);
+        }
+        catch(Exception ex) {
+            assertEquals(ObjectNotFoundException.class, ex.getClass());
+            assertEquals(OBJETO_NAO_ENCONTRADO, ex.getMessage());
+
+        }
     }
 
     private void startUSer() {
